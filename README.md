@@ -28,10 +28,10 @@ TwittMap: (http://twittmap-env2.puvggpuugy.us-west-2.elasticbeanstalk.com/)
 ![photo2](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/search-photography2.png)
 * Search from the input box:
 	* Search "apple":
-! [apple1](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/search-apple.png)
+![apple1](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/search-apple.png)
 * Search from a random point clicked by user:
  	* Search nearest 1000km tweets:
-! [geo](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/geosearch.png)
+![geo](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/geosearch.png)
 
 Note: There are about 30,000+ tweets in ElasticSearch. Also, because tweets are added continuously, there may be some difference between those demo pictures.
 
