@@ -38,6 +38,6 @@ Note: When we make the above screenshots, there are about 30,000+ tweets in Elas
 
 ## Some flaws:
 * We do not convert the UTC time into our time zone, so the time showed is the UTC time.
-* If user once clicks on the map, the geosearch function will be called automatically. In this way, when user want to zoom the map, he must be very cautious to not click. :)
+* If user once clicks on the map, the geosearch function will be called automatically. In this way, when user wants to zoom the map, he must be very cautious to not click. :)
 
 
