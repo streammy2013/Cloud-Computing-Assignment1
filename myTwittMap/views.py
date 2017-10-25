@@ -23,6 +23,7 @@ def start_streaming():
     s = TweetStream()
     s.set_handle(h)
     s.start_stream()
+
 t = threading.Thread(target = start_streaming)
 t.setDaemon(True)
 t.start()
@@ -32,7 +33,7 @@ def show_stored(request):
 	response = es.fetch_stored(1000)
 	response = response['hits']['hits']
 	response = json.dumps(response)
-	return HttpResponse(response, content_type='application/json')
+	return HttpResponse(response, content_type='json')
 
 def search(request):
 	
@@ -40,7 +41,7 @@ def search(request):
 	response = es.search(keyword)
 	response = response['hits']['hits']
 	response = json.dumps(response)
-	return HttpResponse(response, content_type='application/json')
+	return HttpResponse(response, content_type='json')
 
 def geosearch(request):
 	distance = request.POST.get('distance')

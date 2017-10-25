@@ -27,7 +27,7 @@ class MyStreamListener(StreamListener):
 	                'location': {'lat': coords[1], 'lon': coords[0]},                   
                     'profile_image_url': status.author.profile_image_url
 	            }
-                print(status.created_at.strftime("%Y-%m-%d %H:%M:%S"))
+                #print(status.created_at.strftime("%Y-%m-%d %H:%M:%S"))
                 self.tweet_handle.add_tweet(tweet)
                 return True
 
