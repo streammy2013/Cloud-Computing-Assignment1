@@ -1,0 +1,1 @@
+aws es create-elasticsearch-domain --domain-name twitterdata2017 --elasticsearch-version 5.5 --elasticsearch-cluster-config InstanceType=t2.small.elasticsearch --ebs-options EBSEnabled=true,VolumeSize=10

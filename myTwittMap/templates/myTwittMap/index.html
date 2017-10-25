@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+       #map {
+        height:600px;
+       }
+
+       html, body {
+        height: 100%;
+        margin: 5px;
+        padding: 0;
+      }
+    #tweet_count {
+        background:grey;
+        margin-top: 5px;
+        width:200px;
+        height: 20px;
+        border: 1px solid #e6e6e7;
+        font-size: 16px;
+      } 
+         #submit{
+        background:none;
+        margin-top: 5px;
+        width:40px;
+        height: 25px;
+        border: none;
+      }
+      #reset{
+        background:rgb(25,200,25);
+        width:60px;
+        height:20px;
+        border:1px solid #e6e6e7;
+        font-size:14px;
+      }
+
+
+
+    </style>
+  </head>
+  <body>
+    <h3>TwittMap</h3>
+    <form id = "keywordsearch" method="POST">
+        {% csrf_token %}
+        <select id = "selectsearch">
+  
+  <option value="twitter">Twitter</option>
+  <option value="google">Google</option>
+  <option value="amazon">Amazon</option>
+  <option value="job">Job</option>
+  <option value="walmart">Walmart</option>
+  <option value="photography">Photography</option>
+  <option value="cat">Cat</option>
+  <option value="water">Water</option>
+  <option value="fall">Fall</option>
+</select>
+        <input type="text" id = "keyword" name = "searchkey" method="POST">
+        <input type = "submit" class = "submit" value = "search">
+    </form>
+   
+    <form id = "geosearch" method="POST">
+      {% csrf_token %}
+      <input type="text" id ="distance" name="distance" value="100" method="POST">km
+       <input type = "submit" class = "submit" value = "geosearch">
+    </form>
+     <div>
+      <button type="button" id="reset">Reset</button>
+    </div>  
+      <div>
+      <div id = "tweet_count" class="count">
+    </div>
+    <div id="map"></div>
+
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+      var map;
+      var markers = [];
+      var tweetcount = 0;
+      var lastcount = 0;
+      var countDiv = document.getElementById("tweet_count");
+      var fetching = true;
+      var markerCluster;
+      var geosearch = false;
+      var distance = 0;
+      var geo_enabled = false;
+      var circle;
+      //var maxcount = 1000;
+      $(document).ready(function(){
+                 
+      });
+
+      function update_tweet_count(last, current){
+        $('.count').each(function(){
+          var $countThis = $(this);
+          jQuery({ Counter:last }).animate({ Counter:current }, {
+            duration:1000,
+            easing:'swing',
+            step: function(){
+              $countThis.text("Tweets Count: " + Math.ceil(this.Counter));
+          }
+          });
+        });
+      }
+
+
+      function initMap() {
+        var uluru = {lat: 40.809451, lng: -73.960211};
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4,
+          center: uluru
+        });
+
+        // Add a marker clusterer to manage the markers.
+        markerCluster = new MarkerClusterer(map, markers,
+            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+        drawStored(map, markerCluster);
+        //fetchStreaming(map,markerCluster);
+        
+        $("#geosearch").submit(function(event){
+          event.preventDefault();
+          distance = $("#distance").val();
+          //update_search_radius(distance);
+          //用户在选择geosearch之后返回结果 如果想要查看某条tweets 那么这个时候点击依然是会重新搜索的
+          alert(distance);
+          geo_enabled = true;
+        });
+
+        var marker;
+        map.addListener("click", function(event){
+          fetching = false;
+          markerCluster.removeMarkers(markers);
+          clearMarkers();
+          var lat = event.latLng.lat();
+          var lon = event.latLng.lng();
+          console.log(lat + ','+lon);
+          circle = new google.maps.Circle({map: map,
+                    radius: parseFloat(distance),
+                    center: event.latLng,
+                    fillColor: '#777',
+                    fillOpacity: 0.1,
+                    strokeColor: '#AA0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    draggable: true,    // Dragable
+                    editable: true      // Resizable
+          });
+          //map.panTo(new google.maps.LatLng(lat,lon));
+          var location = lat.toString()+","+lon.toString();
+          $.ajax({
+            type: 'POST',
+            url: '/ajax/geosearch/',
+            data: {distance,location,csrfmiddlewaretoken:'{{ csrf_token}}'},
+            dataType:'json',
+            success:function(data) {
+              var count = data.length
+              for (var i = 0; i < count; ++i) {
+                var source = data[i]['_source'];
+                if (source == null) continue;
+                var lat = source['location']['lat'];
+                var lng = source['location']['lon'];
+                var latLng = new google.maps.LatLng(lat, lng);
+                var marker = new google.maps.Marker({
+                  position: latLng,
+                  map: map
+                });
+                attachTweet(marker, source);
+                markers.push(marker);
+                markerCluster.addMarker(marker, true);
+                tweetcount += 1;
+               }
+               console.log("finish")
+              circle.setMap(null);
+             },
+             complete:function() {
+              update_tweet_count(lastcount, tweetcount);
+              
+             }
+          });
+        });
+
+        $("#reset").click(function(event){
+          markerCluster.removeMarkers(markers);
+          $("input[name='searchkey']").val("");
+          clearAll();
+          drawStored(map, markerCluster);
+          fetchStreaming(map,markerCluster);
+        });
+
+        $('#selectsearch').change(function(){ 
+          var p1=$(this).children('option:selected').val();
+          event.preventDefault();
+          fetching = false;
+          markerCluster.removeMarkers(markers);
+          tweetcount=0;   
+          clearAll();
+          update_tweet_count(lastcount,tweetcount);
+          var keyword = p1;
+          $.ajax({
+            type: 'POST',
+            url: '/ajax/search/',
+            data: {keyword,csrfmiddlewaretoken: '{{ csrf_token }}'},
+            dataType:'json',
+            success:function(data) {
+              var count = data.length
+              for (var i = 0; i < count; ++i) {
+                var source = data[i]['_source'];
+                if (source == null) continue;
+                var lat = source['location']['lat'];
+                var lng = source['location']['lon'];
+                var latLng = new google.maps.LatLng(lat, lng);
+                var marker = new google.maps.Marker({
+                position: latLng,
+                map: map
+                });
+                attachTweet(marker, source);
+                markers.push(marker);
+                markerCluster.addMarker(marker, true);
+                tweetcount += 1;
+              }
+            },
+            complete:function() {
+                update_tweet_count(lastcount,tweetcount);
+                lastcount = tweetcount;
+            }
+          });
+          });
+        $("#keywordsearch").submit(function(event){
+          event.preventDefault();
+          fetching = false;
+          markerCluster.removeMarkers(markers);
+          tweetcount=0;   
+          clearAll();
+          update_tweet_count(lastcount,tweetcount);
+          var keyword = $("#keyword").val();
+          $.ajax({
+            type: 'POST',
+            url: '/ajax/search/',
+            data: {keyword,csrfmiddlewaretoken: '{{ csrf_token }}'},
+            dataType:'json',
+            success:function(data) {
+              var count = data.length
+              for (var i = 0; i < count; ++i) {
+                var source = data[i]['_source'];
+                if (source == null) continue;
+                var lat = source['location']['lat'];
+                var lng = source['location']['lon'];
+                var latLng = new google.maps.LatLng(lat, lng);
+                var marker = new google.maps.Marker({
+                position: latLng,
+                map: map
+                });
+                attachTweet(marker, source);
+                markers.push(marker);
+                markerCluster.addMarker(marker, true);
+                tweetcount += 1;
+              }
+            },
+            complete:function() {
+                update_tweet_count(lastcount,tweetcount);
+                lastcount = tweetcount;
+            }
+          });
+        });
+      }
+      function clearAll() {
+        clearMarkers();
+      }
+      function clearMarkers() {
+        for (var i = 0; i < markers.length; i++) {
+          markers[i].setMap(null);
+        }
+        markers = [];
+        lastcount = 0;
+        tweetcount = 0;
+      }
+
+      function clearCircles() {
+        circles.setMap(null);
+      }
+
+      function drawStored(map, MarkerCluster){
+        $.ajax({
+          url: '/ajax/show_stored/',
+          success: function(data) {
+            tweetcount += data.length;
+            var location = data;
+            for (var i = 0; i < location.length; ++i) {
+              //alert(location[i]);
+              var lat = location[i]['_source']['location']['lat'];
+              var lng = location[i]['_source']['location']['lon'];
+              var latLng = new google.maps.LatLng(lat, lng);
+              var marker = new google.maps.Marker({
+                position: latLng,
+                map: map
+              });
+              attachTweet(marker, location[i]["_source"]);
+              markers.push(marker);
+              MarkerCluster.addMarker(marker, true);
+            }
+          },
+          complete: function() {
+              update_tweet_count(lastcount,tweetcount);
+              lastcount = tweetcount;
+          }
+        });
+      
+      }
+
+      function attachTweet(marker, message) {
+          var profile_url = "https://twitter.com/" + message.name;
+          contentStr = '<div>' + 
+                            '<img src="' + message.profile_image_url + '">' + 
+                            '<div><a target="_blank" href="' + profile_url + '"' + '<b>' + message.name +
+                             '</b>' + '</a></div>' +
+                              '<div>' + message.time + '</div>' + 
+                       '</div>' +
+                       '<div>' + 
+                            '<p>' + message.text + '</p>' + 
+                       '</div>';
+
+          
+          var infowindow = new google.maps.InfoWindow({
+            content: contentStr,
+            maxWidth : 220
+          });
+          marker.addListener('mouseover', function() {
+            infowindow.open(map, this);
+            marker.addListener('mouseout', function() {
+              infowindow.close();
+            });
+          });
+      }
+
+
+    </script>
+    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBGs995l_gResRVYrGLFu6pNrr0nmrC4RI&callback=initMap">
+    </script>
+  </body>
+</html>
