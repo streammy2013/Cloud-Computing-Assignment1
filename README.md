@@ -16,9 +16,10 @@ TwittMap: (http://twittmap-env2.puvggpuugy.us-west-2.elasticbeanstalk.com/)
 
 ## Demo:
 
+When the user open the website firstly, he can only see the most recent 1000 tweets. However, the search is done in the whole Elasticsearch domain. The tweets are collected when the web server is running, so it can be seen fetched in real-time. 
+
 * Show the most recent 1000 tweets stored in Elasticsearch:
 ![mostrecent](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/initial.png)
-
 * Search from the dropdown:
 	* Search "cat": 
 ![catsearch1](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/search-cat.png)
@@ -33,6 +34,10 @@ TwittMap: (http://twittmap-env2.puvggpuugy.us-west-2.elasticbeanstalk.com/)
  	* Search nearest 1000km tweets:
 ![geo](https://github.com/streammy2013/Cloud-Computing-Assignment1-TwittMap/blob/master/demo%20img/geosearch.png)
 
-Note: There are about 30,000+ tweets in ElasticSearch. Also, because tweets are added continuously, there may be some difference between those demo pictures.
+Note: When we make the above screenshots, there are about 30,000+ tweets in ElasticSearch. Also, because tweets are added continuously, there may be some difference between those demo pictures. The new tweets are still added to our Elastic Search domain continuously.
+
+## Some flaws:
+* We do not convert the UTC time into our time zone, so the time showed is the UTC time.
+* We do not have much front-end experience, so if user once clicks on the map, the geosearch function will be called automatically.
 
 
