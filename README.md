@@ -3,7 +3,7 @@
 	Member: Mingjie Zhao(mz2646) Ming Zhu(mz2655)
 
 ## Link:
-TwittMap: (http://twittmap-env2.puvggpuugy.us-west-2.elasticbeanstalk.com/)
+TwittMap: (http://twittmap-env3.puvggpuugy.us-west-2.elasticbeanstalk.com/)
 
 ## Technology:
 * Twitter Streaming API, Tweepy 3.5.0
